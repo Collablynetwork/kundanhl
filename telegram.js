@@ -205,9 +205,6 @@ function registerDryRunHandlers({ openDryRunTrade, closeDryRunTrade }) {
       await bot.sendMessage(msg.chat.id, `❌ ${result.error}`);
       return;
     }
-    await bot.sendMessage(msg.chat.id, buildDryRunOpenMessage(result.trade), {
-      reply_markup: menuKeyboard(),
-    });
   });
 
   bot.onText(/\/dryrun_short(?:\s+([A-Za-z0-9]+))?/, async (msg, match) => {
@@ -221,9 +218,6 @@ function registerDryRunHandlers({ openDryRunTrade, closeDryRunTrade }) {
       await bot.sendMessage(msg.chat.id, `❌ ${result.error}`);
       return;
     }
-    await bot.sendMessage(msg.chat.id, buildDryRunOpenMessage(result.trade), {
-      reply_markup: menuKeyboard(),
-    });
   });
 
   bot.onText(/\/dryrun_close(?:\s+([A-Za-z0-9]+))?/, async (msg, match) => {
