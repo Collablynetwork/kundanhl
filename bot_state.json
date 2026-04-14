@@ -1,0 +1,25 @@
+{
+  "stats": {
+    "totalSignals": 0,
+    "wins": 0,
+    "losses": 0,
+    "pnlPct": 0,
+    "byPair": {},
+    "byStrategy": {}
+  },
+  "liveTrades": {},
+  "dryRunTrades": {
+    "HYPE": {
+      "symbol": "HYPE",
+      "side": "BUY",
+      "strategy": "Manual Dry-Run Long",
+      "entry": 44.74,
+      "tp": 45.187400000000004,
+      "sl": 44.5163,
+      "signalMessageId": 293,
+      "signalTime": 1776168468008,
+      "mode": "dryrun"
+    }
+  },
+  "sentSignals": []
+}
