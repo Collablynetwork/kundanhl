@@ -80,6 +80,31 @@ function rrPnlPct(side, entry, exit) {
     : ((entry - exit) / entry) * 100;
 }
 
+function isReplyTargetMissing(error) {
+  const detail = String(
+    error?.response?.body?.description ||
+    error?.response?.data?.description ||
+    error?.message ||
+    ""
+  ).toLowerCase();
+
+  return detail.includes("message to be replied not found");
+}
+
+async function sendTradeUpdate(text, replyToMessageId = null) {
+  try {
+    return await bot.sendMessage(config.telegramChatId, text, {
+      ...(replyToMessageId ? { reply_to_message_id: replyToMessageId } : {}),
+    });
+  } catch (error) {
+    if (!replyToMessageId || !isReplyTargetMissing(error)) {
+      throw error;
+    }
+
+    return bot.sendMessage(config.telegramChatId, text);
+  }
+}
+
 // =========================
 // Strategy trade lifecycle
 // =========================
@@ -129,8 +154,7 @@ async function sendSignal(signal) {
 async function closeTradeAsWin(trade) {
   const pnlPct = rrPnlPct(trade.side, trade.entry, trade.tp);
 
-  await bot.sendMessage(
-    config.telegramChatId,
+  await sendTradeUpdate(
     [
       `✅ TP HIT`,
       `🪙 Pair: ${trade.symbol}`,
@@ -140,7 +164,7 @@ async function closeTradeAsWin(trade) {
       `💰 PnL: ${pnlPct.toFixed(2)}%`,
       `🧠 Strategy: ${trade.strategy}`,
     ].join("\n"),
-    { reply_to_message_id: trade.signalMessageId }
+    trade.signalMessageId
   );
 
   state.stats.wins += 1;
@@ -162,8 +186,7 @@ async function closeTradeAsWin(trade) {
 async function closeTradeAsLoss(trade) {
   const pnlPct = rrPnlPct(trade.side, trade.entry, trade.sl);
 
-  await bot.sendMessage(
-    config.telegramChatId,
+  await sendTradeUpdate(
     [
       `🛑 SL HIT`,
       `🪙 Pair: ${trade.symbol}`,
@@ -173,7 +196,7 @@ async function closeTradeAsLoss(trade) {
       `📉 PnL: ${pnlPct.toFixed(2)}%`,
       `🧠 Strategy: ${trade.strategy}`,
     ].join("\n"),
-    { reply_to_message_id: trade.signalMessageId }
+    trade.signalMessageId
   );
 
   state.stats.losses += 1;
@@ -284,11 +307,7 @@ async function closeDryRunTrade(symbol) {
 async function closeDryRunAsWin(trade) {
   const pnlPct = rrPnlPct(trade.side, trade.entry, trade.tp);
 
-  await bot.sendMessage(
-    config.telegramChatId,
-    buildDryRunTpMessage(trade, pnlPct),
-    { reply_to_message_id: trade.signalMessageId }
-  );
+  await sendTradeUpdate(buildDryRunTpMessage(trade, pnlPct), trade.signalMessageId);
 
   delete state.dryRunTrades[trade.symbol];
   saveState();
@@ -297,11 +316,7 @@ async function closeDryRunAsWin(trade) {
 async function closeDryRunAsLoss(trade) {
   const pnlPct = rrPnlPct(trade.side, trade.entry, trade.sl);
 
-  await bot.sendMessage(
-    config.telegramChatId,
-    buildDryRunSlMessage(trade, pnlPct),
-    { reply_to_message_id: trade.signalMessageId }
-  );
+  await sendTradeUpdate(buildDryRunSlMessage(trade, pnlPct), trade.signalMessageId);
 
   delete state.dryRunTrades[trade.symbol];
   saveState();
